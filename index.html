@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>妖怪めんこ</title>
+<style>
+  :root{
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    --mat:#2f5a2e; --mat2:#1e3d1d; --gold:#ffcb47; --ink:#2a1a0e; --red:#c94040;
+    --aw:clamp(200px, calc(100dvh - 335px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)), min(90vw,340px));
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; min-height:100%; font-family:"Hiragino Sans","Yu Gothic",sans-serif;
+    background:radial-gradient(ellipse at 50% 0%,#5a3a1e,#241205 85%);
+    color:#fff0dd; display:flex; flex-direction:column; align-items:center; padding:10px;
+    overflow-x:hidden; user-select:none;
+  }
+  h1{font-size:1.15rem; margin:4px 0 2px; letter-spacing:.08em; text-shadow:2px 2px 0 #000;}
+  .topbar{display:flex; justify-content:space-between; align-items:center; width:100%; max-width:340px; margin:2px 0 6px; font-size:.8rem;}
+  .tk{color:var(--gold); font-weight:bold;}
+  .screen{width:100%; max-width:340px; display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .hidden{display:none !important;}
+  button{font-family:inherit;}
+  button.big{
+    font-size:1rem; padding:10px 22px; border-radius:24px; border:none; background:var(--gold);
+    color:var(--ink); font-weight:bold; box-shadow:0 4px 0 #a5751a; cursor:pointer;
+  }
+  button.big:active{transform:translateY(3px); box-shadow:0 1px 0 #a5751a;}
+  button.big:disabled{opacity:.4;}
+  button.back{background:#0005; color:#fff0dd; border:1px solid #fff4; border-radius:14px; padding:4px 12px; font-size:.75rem; cursor:pointer;}
+  .menu{display:flex; flex-direction:column; gap:12px; width:100%; margin-top:14px;}
+  .menu button{font-size:1.1rem; padding:16px;}
+  .label{font-size:.7rem; opacity:.8; text-align:center;}
+  .msg{min-height:2.2em; font-size:.85rem; text-align:center; max-width:320px; padding:0 8px;}
+  .win-title{color:var(--gold); font-weight:bold; text-shadow:1px 1px 0 #000;}
+  .lose-title{color:#ff8a8a; font-weight:bold; text-shadow:1px 1px 0 #000;}
+  .heart{color:var(--red);} .heart.lost{color:#5554;}
+  /* kuji */
+  .kujiRow{display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .slip{width:38px; height:52px; background:linear-gradient(#fff8e2,#f0dca0); border:2px solid #8a5a20;
+    border-radius:4px 4px 10px 10px; display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; cursor:pointer; box-shadow:0 3px 0 #6b4010;}
+  .slip:active{transform:translateY(2px); box-shadow:0 1px 0 #6b4010;}
+  .reveal{min-height:100px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; text-align:center;}
+  .pop{animation:pop .4s;}
+  @keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  /* card lists */
+  .cardList{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%;}
+  .chip{position:relative; width:64px; height:78px; border-radius:10px; border:2px solid #fff3; background:#0004;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;}
+  .chip svg{width:38px; height:38px; filter:drop-shadow(0 2px 2px #0008);}
+  .chip .nm{font-size:.55rem; margin-top:2px;}
+  .chip .cnt{position:absolute; top:-6px; right:-6px; background:var(--gold); color:var(--ink); font-size:.65rem; font-weight:bold;
+    border-radius:10px; padding:1px 6px; border:1px solid #000;}
+  .chip.sel{border-color:var(--gold); background:#ffcb4722;}
+  .chip.off{opacity:.35;}
+  .stage{width:100%; text-align:left; font-size:.9rem; padding:12px 14px; border-radius:12px; border:2px solid #fff3; background:#0004; color:#fff0dd; cursor:pointer;}
+  .stage.locked{opacity:.4;}
+  .stage.clear{border-color:var(--gold);}
+  .panel{width:100%; background:#0005; border:1px solid #fff2; border-radius:12px; padding:10px 12px; font-size:.78rem; line-height:1.6;}
+  .pb svg{width:56px; height:56px;}
+  .ic{display:inline-flex; vertical-align:middle; margin-right:6px;}
+  .menu button{display:flex; align-items:center; justify-content:center;}
+  .sil svg{filter:brightness(0) opacity(.6);}
+  .ticketWrap{min-height:120px; display:flex; justify-content:center; align-items:center;}
+  .shake{animation:shake .12s infinite alternate;}
+  @keyframes shake{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+  .tkOpen{position:relative; width:112px; height:112px;}
+  .tkOpen>svg{position:absolute; inset:0;}
+  .tkChar{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  .tkChar svg{width:60px; height:60px;}
+  .hpRow{width:100%; display:flex; flex-direction:column; gap:3px; margin:2px 0;}
+  .hpBox{display:flex; align-items:center; gap:6px; font-size:.7rem;}
+  .hpName{min-width:3.6em; white-space:nowrap; text-align:right; opacity:.9;}
+  .hpBar{display:none;}
+  .hpFill{height:100%; width:100%; background:linear-gradient(90deg,#5ee27a,#b6f06a); transition:width .3s;}
+  .hpFill.mid{background:linear-gradient(90deg,#ffcb47,#ffe37a);} .hpFill.low{background:linear-gradient(90deg,#ff5a3a,#ff8a5a);}
+  .spBtn{font-size:.85rem; padding:8px 14px; margin:2px 0;}
+  .spBtn:disabled{opacity:.45;}
+  .spBtn.armed{outline:3px solid #ffd84a; box-shadow:0 0 12px #ffd84a;}
+  .hpNum{min-width:2.6em; font-size:.95rem; font-weight:bold; color:var(--gold); font-variant-numeric:tabular-nums;}
+  .hpLbl{font-size:.6rem; opacity:.8;}
+  .side{width:100%; display:flex; flex-direction:column; align-items:center; gap:1px;}
+  .side .hpBox{justify-content:center;}
+  .side .hpName{text-align:left; min-width:0;}
+  body.inBattle h1{display:none;}
+  body.inBattle{padding:4px 10px 6px;}
+  body.inBattle .topbar{margin:0 0 2px;}
+  #battle{gap:3px;}
+  #battle .msg{font-size:.75rem; min-height:3.4em; line-height:1.4; padding:0 4px;}
+  #battle .btnRow .spBtn{padding:7px 10px; margin:0;}
+  #battle .turnBadge{padding:2px 12px; font-size:.72rem;}
+  #battle .label{font-size:.65rem;}
+  .btnRow{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:100%;}
+  .btnRow .spBtn{font-size:.78rem; padding:8px 10px;}
+  .defBtn{background:#8fd3ff !important; box-shadow:0 4px 0 #3a7fa8 !important;}
+  .statRow{display:flex; flex-wrap:wrap; gap:2px 8px; justify-content:center; font-size:.62rem; opacity:.92; margin:0 0 2px; font-variant-numeric:tabular-nums;}
+  .statRow b{color:var(--gold);} .statRow .up{color:#8fd3ff;}
+  .statTbl{display:flex; flex-wrap:wrap; gap:2px 10px; margin:4px 0; font-size:.75rem;}
+  .statTbl b{color:var(--gold);}
+  .slots{display:flex; gap:6px; width:100%;}
+  .slot{flex:1; border:2px solid #fff3; border-radius:10px; background:#0004; padding:4px 2px; text-align:center; font-size:.7rem; display:flex; flex-direction:column;}
+  .slot.next{border-color:var(--gold);} .slot span{opacity:.75; font-size:.6rem;} .slot b{color:var(--gold);}
+  .teamRow{display:flex; gap:4px; justify-content:center; align-items:stretch; margin:1px 0;}
+  .teamRow .tl{font-size:.6rem; align-self:center; min-width:2.8em; text-align:right;}
+  .tm{flex:1; max-width:100px; border:1px solid #fff3; border-radius:8px; background:#0004; padding:1px 4px; font-size:.6rem; text-align:center; display:flex; flex-direction:row; gap:3px; justify-content:center; align-items:center; white-space:nowrap;}
+  .tm i{font-style:normal; opacity:.7; font-size:.5rem;}
+  .tm.cur{border-color:var(--gold); color:var(--gold); background:#ffcb4722;}
+  .tm.dead{opacity:.35; text-decoration:line-through;}
+  .gNote{font-size:.6rem; opacity:.65; text-align:center; margin-top:2px;}
+  /* battle */
+  .turnBadge{font-size:.78rem; font-weight:bold; padding:3px 14px; border-radius:12px;}
+  .turnBadge.you{background:#ffcb4733; color:var(--gold); border:1px solid var(--gold);}
+  .turnBadge.cpu{background:#ff5a5a33; color:#ff9a9a; border:1px solid #ff5a5a;}
+  .arena{
+    position:relative; width:var(--aw); aspect-ratio:1/1; border-radius:50%; touch-action:none;
+    background:radial-gradient(circle at 50% 40%,var(--mat),var(--mat2) 85%);
+    border:8px solid #6b4423; box-shadow:0 0 0 3px #3a2410, inset 0 0 30px #000a, 0 8px 16px #000a;
+    margin:2px 0;
+  }
+  .card{
+    position:absolute; top:0; left:0; width:64px; height:64px; margin:-32px 0 0 -32px;
+    display:flex; align-items:center; justify-content:center; will-change:transform;
+    filter:drop-shadow(0 3px 3px #0009);
+  }
+  .card svg{width:56px; height:56px;}
+  #cardA,#cardB{touch-action:none;}
+  .flipping{animation:flipOut .55s forwards;}
+  @keyframes flipOut{ to{ transform:scale(.3) rotateY(180deg); opacity:0; } }
+</style>
+</head>
+<body>
+<h1><span class="ic" data-ic="card" data-h="22"></span> 妖怪めんこ</h1>
+<div class="topbar"><button class="back" id="backBtn">‹ ホーム</button><div class="tk"><span class="ic" data-ic="coin" data-h="12"></span>所持金 <span id="tickets">0</span>円</div></div>
+
+<div id="home" class="screen">
+  <div class="menu">
+    <button class="big" data-go="kuji"><span class="ic" data-ic="ticket" data-h="20"></span>くじ引きモード</button>
+    <button class="big" data-go="scenario"><span class="ic" data-ic="book" data-h="20"></span>シナリオモード</button>
+    <button class="big" data-go="versus"><span class="ic" data-ic="swords" data-h="20"></span>対戦モード</button>
+    <button class="big" data-go="zukan"><span class="ic" data-ic="card" data-h="20"></span>説明図鑑</button>
+  </div>
+  <div class="label" style="margin-top:8px;">シナリオはくじで引いためんこで挑戦！対戦モードは好きな3体で勝ち抜き戦！</div>
+</div>
+
+<div id="kuji" class="screen hidden">
+  <div class="label">駄菓子屋のくじ。100円で1回、何が出るかはお楽しみ！</div>
+  <div class="ticketWrap" id="ticketWrap"></div>
+  <button class="big" id="openBtn">くじをひらく！</button>
+  <div class="reveal" id="reveal"></div>
+  <div class="label">持っているめんこ</div>
+  <div class="cardList" id="kujiInv"></div>
+</div>
+
+<div id="scenario" class="screen hidden">
+  <div class="label">妖怪たちを順番に倒していこう</div>
+  <div id="stageList" style="width:100%; display:flex; flex-direction:column; gap:8px;"></div>
+</div>
+
+<div id="versus" class="screen hidden">
+  <div class="panel"><b>CPUと対戦</b>：先鋒・中堅・大将の3体を選んで戦う勝ち抜き戦。減った体力はそのまま引き継ぎ、勝った妖怪は次の相手とも戦うよ。持っているめんこの枚数は関係なし。同じ妖怪は1チームに1体まで。<br><b>2Pと対戦</b>：1つの画面をふたりで交代しながら遊ぶ（1Pは下、2Pは上のめんこ）。おたがい3体を選んで勝ち抜き戦。お金はなし。倒された側が次の勝負を先攻するよ。</div>
+  <button class="big" id="versusStart">CPUと対戦</button>
+  <button class="big" id="versus2pStart">2Pと対戦（ふたりで）</button>
+</div>
+
+<div id="zukan" class="screen hidden">
+  <div class="panel">
+    <b>遊び方</b><br>
+    ①くじ引きでめんこをゲット（同じ妖怪が出たら枚数が増える）<br>
+    ②自分のめんこをタップして持ち上げ、引っぱって離すと反対方向へ飛ぶ<br>
+    ③<b>ダメージのしくみ</b>：飛ばしためんこが相手にぶつかるとダメージ。正面から当てるほど大きく、かすめると小さい。相手の体力を0にすれば勝ち<br>
+    ④遠くから打つと届くまでに威力が落ちるので、近づいてから打つのがコツ。ただし外れた時は必ず少し距離をとって止まるので、近づいたからといって次の番でいきなり無防備に瞬殺されることはない。安心して攻めよう。強く打ちすぎて土俵の外に出たら、めんこは元の場所に戻って攻守交代<br>
+    ⑤打ったあと土俵に残っても外に出ても攻守交代。交互にぶつけ合う（対戦モードは2Pともあそべる）<br>
+    ⑥シナリオは、勝てば相手の妖怪を1枚ゲット、負ければ使っためんこを1枚うしなう。対戦モードは3体の勝ち抜き戦（めんこの増減なし）<br>    ⑦必殺技は自分の2ターン目から使えるよ。100円たまるとくじを1回引ける<br>
+  </div>
+  <div class="cardList" id="zukanGrid"></div>
+  <div class="panel" id="zukanDetail">気になる妖怪をタップしてみよう</div>
+</div>
+
+<div id="pick" class="screen hidden">
+  <div class="label" id="pickTitle">使うめんこを選ぼう</div>
+  <div class="slots" id="pickSlots"></div>
+  <div class="cardList" id="pickList"></div>
+  <div class="btnRow" id="pickBtns"></div>
+  <div class="msg" id="pickMsg"></div>
+</div>
+
+<div id="battle" class="screen hidden">
+  <div class="label" id="battleInfo"></div>
+  <div class="turnBadge you" id="turnBadge">あなたの番</div>
+  <div class="side"><div class="hpBox"><span class="hpName" id="hpNameB">CPU</span><span class="hpLbl">HP</span><span class="hpNum" id="hpNumB"></span></div><div class="statRow" id="statB"></div></div>
+  <div class="arena" id="arena">
+    <div class="card" id="cardB"></div>
+    <div class="card" id="cardA"></div>
+  </div>
+  <div class="side"><div class="hpBox"><span class="hpName" id="hpNameA">あなた</span><span class="hpLbl">HP</span><span class="hpNum" id="hpNumA"></span></div><div class="statRow" id="statA"></div></div>
+  <div class="btnRow">
+    <button class="big spBtn" id="spBtn" type="button">必殺技</button>
+    <button class="big spBtn defBtn" id="defBtn" type="button">防御アップ</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div id="result" class="screen hidden">
+  <div class="panel" id="resultMsg" style="text-align:center; font-size:.9rem;"></div>
+  <div id="resultBtns" style="display:flex; flex-direction:column; gap:10px; align-items:center;"></div>
+</div>
+
+<script>
+(function(){
+function gridToSVG(grid,palette){
+    const rows=grid.length, cols=grid[0].length; let s='';
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const code=grid[r][c]; if(!code) continue;
+      s+=`<rect x="${c}" y="${r}" width="1" height="1" fill="${palette[code]}"/>`;
+    }
+    return `<svg viewBox="0 0 ${cols} ${rows}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+  }
+  function withOverlay(base, overlay){
+    const g=base.map(r=>r.slice());
+    (overlay||[]).forEach(([r,c,code])=>{ g[r][c]=code; });
+    return g;
+  }
+  const KAIJU_BODY=[
+    [0,0,0,0,7,0,0,0,0,7,0,0,0,0],[0,0,0,0,7,7,0,0,7,7,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,0,1,2,6,2,2,2,2,6,2,1,0,0],[0,0,1,2,2,3,3,3,3,2,2,1,0,0],
+    [0,0,0,1,2,2,2,2,2,2,1,0,0,0],[0,0,4,1,2,2,2,2,2,2,1,4,0,0],
+    [0,4,4,1,2,2,2,2,2,2,1,4,4,0],[0,4,1,2,2,8,8,8,8,2,2,1,4,0],
+    [0,0,1,2,8,8,8,8,8,8,2,1,0,0],[0,0,1,2,2,8,8,8,8,2,2,1,0,0],
+    [0,0,0,1,2,2,2,2,2,2,1,0,0,0],[0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,0,1,3,3,1,0,0,0,0,0],[0,0,0,0,1,1,3,3,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,0,0,0,0,0]
+  ];
+  const UMBRELLA_BODY=[
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,2,2,1,0,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],[0,0,0,1,2,4,2,2,4,2,1,0,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],[0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],[1,3,3,3,3,3,3,3,3,3,3,3,3,1],
+    [0,0,0,0,1,6,7,7,6,1,0,0,0,0],[0,0,1,1,0,0,8,8,0,0,1,1,0,0],
+    [0,0,0,0,0,0,8,8,0,0,0,4,4,0],[0,0,0,0,0,0,8,8,0,0,0,0,0,0],
+    [0,0,0,0,0,0,9,9,0,0,0,0,0,0],[0,0,0,0,0,0,9,9,0,0,0,0,0,0],
+    [0,0,0,0,0,0,9,9,0,0,0,0,0,0],[0,0,0,0,0,1,9,9,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,0,0,0]
+  ];
+  const MUKADE_BODY=[
+    [0,0,0,6,0,0,0,0,0,0,6,0,0,0],[0,0,0,0,6,0,0,0,0,6,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],[0,0,0,0,1,8,2,2,8,1,0,0,0,0],
+    [0,0,0,9,1,2,2,2,2,1,9,0,0,0],[0,0,0,0,9,1,2,2,1,9,0,0,0,0],
+    [0,0,6,0,1,2,2,2,2,1,0,6,0,0],[0,0,0,0,1,3,3,3,3,1,0,0,0,0],
+    [0,6,0,0,1,2,2,2,2,1,0,0,6,0],[0,0,0,0,1,3,3,3,3,1,0,0,0,0],
+    [0,0,6,0,1,2,2,2,2,1,0,6,0,0],[0,0,0,0,1,3,3,3,3,1,0,0,0,0],
+    [0,6,0,0,1,2,2,2,2,1,0,0,6,0],[0,0,0,0,1,3,3,3,3,1,0,0,0,0],
+    [0,0,6,0,1,2,2,2,2,1,0,6,0,0],[0,0,0,0,0,1,2,2,1,0,0,0,0,0],
+    [0,9,0,0,0,1,1,1,1,0,0,0,9,0]
+  ];
+  const ROBOT_STYLE_LEGS=[
+    [13,3,1],[13,4,3],[13,5,3],[13,6,0],[13,7,0],[13,8,3],[13,9,3],[13,10,1],
+    [14,3,1],[14,4,3],[14,5,3],[14,6,0],[14,7,0],[14,8,3],[14,9,3],[14,10,1],
+    [15,3,1],[15,4,3],[15,5,3],[15,6,0],[15,7,0],[15,8,3],[15,9,3],[15,10,1],
+    [16,4,1],[16,5,1],[16,6,0],[16,7,0],[16,8,1],[16,9,1]
+  ];
+  const ONI_CLUB=[
+    [6,12,9],[6,13,9],[7,11,9],[7,12,9],[7,13,9],[8,11,9],[8,12,9],[8,13,9],
+    [9,12,9],[9,13,4],[10,12,6],[10,13,9],[11,12,6],[11,13,9]
+  ];
+  const ONI_PANTS=[
+    [12,4,5],[12,5,1],[12,6,1],[12,7,1],[12,8,1],[12,9,5],
+    [13,4,5],[13,5,1],[13,8,1],[13,9,5]
+  ];
+  const CYCLOPS_EYE=[
+    [0,4,0],[0,9,0],[1,4,0],[1,5,0],[1,8,0],[1,9,0],[0,6,7],[0,7,7],[1,6,7],[1,7,7],
+    [4,4,2],[4,9,2],[5,5,2],[5,6,2],[5,7,2],[5,8,2],[4,6,6],[4,7,6],[5,6,6],[5,7,6]
+  ];
+  const MEDUSA_HAIR=[[0,6,7],[0,7,7]];
+  const KAPPA_LEGS=[
+    [13,3,1],[13,4,2],[13,5,2],[13,6,0],[13,7,0],[13,8,2],[13,9,2],[13,10,1],
+    [14,3,1],[14,4,2],[14,5,2],[14,6,0],[14,7,0],[14,8,2],[14,9,2],[14,10,1],
+    [15,3,1],[15,4,2],[15,5,2],[15,6,0],[15,7,0],[15,8,2],[15,9,2],[15,10,1],
+    [16,3,1],[16,4,1],[16,5,1],[16,6,0],[16,7,0],[16,8,1],[16,9,1],[16,10,1]
+  ];
+  const KAPPA_DISH=[[0,5,6],[0,6,6],[0,7,6],[0,8,6],[1,5,6],[1,8,6]];
+  const KAPPA_BEAK=[[5,5,4],[5,6,4],[5,7,4],[5,8,4]];
+  const ROKUROKUBI_NECK=[[1,10,2],[1,11,2],[2,11,2],[2,12,2],[3,12,2],[3,13,2]];
+
+  const TORI_BODY=[
+    [0,0,0,0,0,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,0,0,0],
+    [0,0,0,1,1,1,1,4,4,1,1,1,0,0],
+    [0,0,1,1,1,1,1,1,1,6,1,1,1,0],
+    [0,0,1,1,1,1,1,1,1,1,1,9,9,0],
+    [0,0,1,1,1,1,1,1,1,1,1,9,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+    [1,0,0,0,1,1,1,1,1,1,1,0,0,1],
+    [0,0,0,0,0,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,9,0,9,0,9,0,0,0,0],
+    [0,0,0,0,0,9,0,9,0,9,0,0,0,0],
+    [0,0,0,0,0,9,0,9,0,9,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  ];
+  const HORN_OUTLINE=[[0,3,1],[0,5,1],[0,8,1],[0,10,1],[1,3,1],[1,6,1],[1,7,1],[1,10,1]];
+  const HITOKOZO_BODY=[
+    [0,0,0,0,1,0,1,0,1,0,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,1,1,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,1,1,2,1,1,1,1,1,1,2,1,1,0],
+    [0,1,2,1,2,1,6,6,1,2,1,2,1,0],
+    [0,1,2,2,2,1,1,1,1,2,2,2,1,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,1,2,2,2,2,2,2,2,2,1,1,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,0,1,2,2,2,2,2,2,1,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,0,1,2,2,2,2,2,2,1,0,0,0],
+    [0,0,0,1,1,2,2,2,2,1,1,0,0,0],
+  ];
+  const KAPPA_BODY=[
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,0,1,6,6,6,6,1,1,0,0,0],
+    [0,0,0,1,1,2,2,2,2,2,1,1,0,0],
+    [0,0,1,1,2,2,2,2,2,2,2,1,1,0],
+    [0,0,1,2,2,2,2,2,2,2,2,2,1,0],
+    [0,0,1,2,2,2,2,2,2,2,2,2,1,0],
+    [0,0,1,2,2,4,4,4,4,2,2,2,1,0],
+    [0,0,1,1,2,2,4,4,2,2,2,1,1,0],
+    [0,0,1,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,1,2,2,2,2,2,2,2,2,2,1,1],
+    [0,1,2,2,2,2,2,2,2,2,2,2,2,1],
+    [0,1,2,2,2,2,2,2,2,2,2,2,2,1],
+    [0,1,2,2,2,2,2,2,2,2,2,2,2,1],
+    [0,1,1,2,3,3,3,3,3,3,2,2,1,1],
+    [0,0,1,2,2,3,3,3,3,2,2,2,1,0],
+    [0,0,1,1,2,2,2,2,2,2,2,1,1,0],
+    [0,0,0,1,1,1,2,2,2,1,1,1,0,0],
+  ];
+  const ROKUROKUBI_BODY=[
+    [0,0,0,1,1,7,7,7,7,1,1,0,0,0],
+    [0,0,0,1,7,2,2,2,2,7,1,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,0,1,2,1,2,2,1,2,1,0,0,0],
+    [0,0,0,1,1,2,2,2,2,1,1,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,1,1,2,2,2,2,1,1,0,0,0],
+    [0,1,1,1,2,2,2,2,2,2,1,1,1,0],
+    [1,1,2,2,2,2,2,2,2,2,2,2,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+  ];
+  const YUKIONNA_BODY=[
+    [0,0,0,1,1,7,7,7,7,1,1,0,0,0],
+    [0,0,0,1,7,2,2,2,2,7,1,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,0,1,2,1,2,2,1,2,1,0,0,0],
+    [0,0,0,1,1,2,2,2,2,1,1,0,0,0],
+    [0,0,1,1,1,2,2,2,2,1,1,1,0,0],
+    [0,1,1,2,2,2,3,3,2,2,2,1,1,0],
+    [1,1,2,2,2,3,2,2,3,2,2,2,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,1,2,2,2,2,2,2,2,2,2,2,1,1],
+    [0,1,1,2,2,2,2,2,2,2,2,1,1,0],
+  ];
+  const TENGU_BODY=[
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,2,2,2,2,1,1,0,0,0],
+    [0,0,1,1,2,2,2,2,2,2,1,1,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,0,1,2,1,2,2,2,2,1,2,1,0,0],
+    [0,0,1,2,2,2,4,2,2,2,2,1,0,0],
+    [0,0,1,1,2,2,4,2,2,2,1,1,0,0],
+    [0,0,0,1,1,2,4,4,2,1,1,0,0,0],
+    [0,1,1,1,2,2,2,2,2,2,1,1,1,0],
+    [0,1,9,9,9,9,9,9,9,9,9,9,1,0],
+    [1,1,2,2,2,2,2,2,2,2,2,2,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,1,2,2,2,2,2,2,2,2,2,2,1,1],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,1,1,2,2,2,2,2,2,1,1,1,0],
+  ];
+  const GASHADOKURO_BODY=S2G([
+    "..............",
+    "....KKKKKK....",
+    "..KKWWWWWWKK..",
+    ".KWWWWWWWWWWK.",
+    ".KWWWWWWWWWWK.",
+    "KWWWWWWWWWWWWK",
+    "KWWKKKWWKKKWWK",
+    "KWKKKKKWKKKKWK",
+    "KWKKKKKWKKKKWK",
+    "KWWKKKWWWKKKWK",
+    ".KWWWWWKWWWWK.",
+    ".KWWWWKKKWWWK.",
+    "..KKWWWWWWKK..",
+    "...KWKWKWKWK..",
+    "...KWKWKWKWK..",
+    "...KKKKKKKKK..",
+    ".............."],{K:1,W:2});
+  const DAIDARABOTCHI_BODY=[
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,1,2,2,2,2,1,1,0,0,0],
+    [0,0,0,1,2,2,2,2,2,2,1,0,0,0],
+    [1,1,1,1,2,1,2,2,1,2,1,1,1,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,1,3,3,3,3,1,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,3,3,3,3,2,2,2,2,1],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,1,1,1,1,2,2,2,2,1,1,1,1,1],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,3,3,3,3,1,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+    [0,0,0,0,1,2,2,2,2,1,0,0,0,0],
+  ];
+  const CHOCHIN_BODY=[
+    [0,0,0,0,0,0,9,9,0,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,1,1,0,0,0,0],
+    [0,0,0,1,2,2,2,2,2,2,1,0,0,0],
+    [0,0,1,2,2,2,2,2,2,2,2,1,0,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,3,3,3,3,3,3,3,3,3,3,1,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+    [1,2,2,2,2,2,1,1,2,2,2,2,2,1],
+    [1,2,2,2,2,2,1,1,2,2,2,2,2,1],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,2,2,2,2,2,2,2,2,2,2,1,0],
+    [0,1,3,3,3,3,3,3,3,3,3,3,1,0],
+    [0,1,1,2,2,2,9,9,2,2,2,1,1,0],
+    [0,0,1,1,2,2,9,9,2,2,1,1,0,0],
+    [0,0,0,1,1,1,9,9,1,1,1,0,0,0],
+    [0,0,0,0,0,1,1,1,1,0,0,0,0,0],
+  ];
+  function S2G(rows,map){ return rows.map(r=>Array.from(r).map(ch=>map[ch]||0)); }
+  // ボトルサバイバルの女性・おばあさんのドット絵（16x16）
+  const WOMAN_BODY=S2G([
+    "..KK........KK..",
+    "..KEK......KEK..",
+    "..KEEKKKKKKEEK..",
+    "..KBBBBBBBBBBK..",
+    ".KBBBSBBBBSBBBK.",
+    ".KBBSSBBBBSSBBK.",
+    ".KBSSSSSSSSSSBK.",
+    ".KBSKWSSSSKWSBK.",
+    ".KBSKKSSSSKKSBK.",
+    ".KBPPSSMMSSPPBK.",
+    "..KBSSSSSSSSBK..",
+    "...KRRGGGGRRK.K.",
+    "..KSKTTRRTTKSKBK",
+    "...KQQQQQQQQKBBK",
+    "..KQQQWQQWQQQKKK",
+    "....KSK..KSK...."],{K:1,B:2,S:3,W:4,R:5,E:6,P:7,M:8,G:9,T:10,Q:11});
+  const NOPPERA_BODY=S2G([
+    "......KK......",".....KHHK.....","....KHHHHK....","...KHHHHHHK...","..KHHSSSSHHK..",
+    "..KSSSSSSSSK..","..KSSSSSSSSK..","..KSSSSSSSSK..","..KSSSSSSSSK..","...KSSSSSSK...",
+    "....KKWWKK....","...KCCWWCCK...",".KCCCCCCCCCCK.",".KCCDDDDDDCCK.","..KCCCCCCCCK..",
+    "...KCCKKCCK...","...KGGKKGGK..."],{K:1,S:2,H:3,C:4,D:5,W:6,G:7,s:8});
+  const SNAKE_BODY=S2G([
+    "................",
+    "..KKKKK.........",
+    ".KBBBBBK........",
+    "KBBYPBBBK.......",
+    "KBBBBBBBBK......",
+    "KBBBLBBBBK......",
+    "KKKKLBBBBK......",
+    "....KLBBBK......",
+    "....KLBbBK......",
+    "...KBBBBBKKK....",
+    "..KBBbBBBBBBKK..",
+    ".KBBBBBbBBBBBBK.",
+    "KBbBBbBBBbBBbBBK",
+    "KBBLLLLLLLLLLBBK",
+    ".KBbBBbBBbBBBBK.",
+    "..KKKKKKKKKKKK.."],{K:1,B:2,b:3,Y:4,P:1,L:5,R:6});
+  const GRANNY_BODY=S2G([
+    "................",
+    ".....KKKKKK.....",
+    "....KEEEEEEK....",
+    "...KEEEEEEEEK...",
+    "...KESSSSSSEK...",
+    "...KSSKSSKSSK...",
+    "...KSSSSSSSSK...",
+    "....KSShhSSK....",
+    ".....KKKKKK.....",
+    "....KHHHHHHK....",
+    "...KHHWWWWHHK...",
+    "..KSKHWWWWHKSK..",
+    "...KKHWWWWHKK...",
+    "....KHHHHHHK....",
+    "....KHHHHHHK....",
+    "....KKKKKKKK...."],{K:1,E:2,S:3,H:4,W:5,h:6});
+  const BODY_MAP={nekomusume:WOMAN_BODY, yamauba:GRANNY_BODY, nopperabo:NOPPERA_BODY, snake:SNAKE_BODY, kaiju:KAIJU_BODY, umbrella:UMBRELLA_BODY, mukade:MUKADE_BODY, 
+    chochin:CHOCHIN_BODY, hitokozo:HITOKOZO_BODY, kappa:KAPPA_BODY, rokurokubi:ROKUROKUBI_BODY,
+    yukionna:YUKIONNA_BODY, tengu:TENGU_BODY, gashadokuro:GASHADOKURO_BODY};
+  const CHAR_ORDER=['akaoni','aooni','hitokozo','nopperabo','karakasa','nekomusume','kappa','rokurokubi','yukionna','yamauba','omukade','tsuchigumo','orochi',
+    'chochin','tengu','gashadokuro','shutendoji'];
+  const CHAR_DB={
+    akaoni:{name:'赤鬼', body:'kaiju', flip:true, overlay:[...ONI_CLUB,...ROBOT_STYLE_LEGS],
+      palette:{1:'#2a0a08',2:'#d1442a',3:'#7a1f10',4:'#d1442a',6:'#fff3b0',7:'#d8b56a',8:'#e8875a',9:'#5a3d1a'}},
+    hitokozo:{name:'一つ目小僧', body:'kaiju', overlay:[...CYCLOPS_EYE],
+      palette:{1:'#14141c',2:'#cfa876',3:'#7a5a3a',4:'#cfa876',6:'#fff8e0',7:'#333333',8:'#9fd1e6'}},
+    karakasa:{name:'唐傘', body:'umbrella', overlay:[],
+      palette:{1:'#2a1208',2:'#7a1f1f',3:'#4a1010',4:'#c9613a',6:'#fff3d0',7:'#1a1a1a',8:'#ff5a7a',9:'#5a3d1a'}},
+    kappa:{name:'河童', body:'kaiju', overlay:[...KAPPA_DISH,...KAPPA_BEAK,...KAPPA_LEGS],
+      palette:{1:'#0a1f14',2:'#4a9a5a',3:'#215a2e',4:'#d9e6a0',6:'#fff3b0',7:'#d9e6a0',8:'#e8875a',9:'#2f4a1a'}},
+    rokurokubi:{name:'ろくろ首', body:'kaiju', overlay:[...ROKUROKUBI_NECK,...MEDUSA_HAIR],
+      palette:{1:'#141428',2:'#e6cfa8',3:'#3d2a55',4:'#e6cfa8',6:'#2a2a3a',7:'#7a5aff',8:'#c9a8e6',9:'#1a1a1a'}},
+    yukionna:{name:'雪女', body:'kaiju', overlay:[...ROKUROKUBI_NECK,...MEDUSA_HAIR],
+      palette:{1:'#17232e',2:'#f2f9ff',3:'#bcd9ea',4:'#f2f9ff',6:'#3ec9ff',7:'#ffffff',8:'#d8f0ff',9:'#eaf6ff'}},
+    shutendoji:{name:'酒呑童子', body:'kaiju', overlay:[...ONI_CLUB,...ROBOT_STYLE_LEGS],
+      palette:{1:'#1a0505',2:'#8a1020',3:'#40060e',4:'#8a1020',6:'#ffe14d',7:'#f5d9a0',8:'#c73a4a',9:'#2a1508'}},
+    aooni:{name:'青鬼', body:'kaiju', overlay:[...ONI_CLUB,...ROBOT_STYLE_LEGS],
+      palette:{1:'#0a1030',2:'#3a6fd1',3:'#1f3f8a',4:'#3a6fd1',6:'#fff3b0',7:'#ffd84a',8:'#9fb8e8',9:'#5a3d1a'}},
+    omukade:{name:'オオムカデ', body:'mukade', overlay:[],
+      palette:{1:'#1a0a05',2:'#c9432a',3:'#7a1f10',6:'#2a2a2a',8:'#1a1a1a',9:'#ff2a2a'}},
+    chochin:{name:'提灯お化け', body:'chochin', overlay:[[6,5,5],[11,5,5],[6,6,5],[11,6,5],[6,7,5],[11,7,5],[6,8,5],[11,8,5],[7,5,7],[10,5,7],[7,6,7],[10,6,7],[7,7,7],[10,7,7],[7,8,7],[10,8,7],[7,4,5],[7,9,5],[10,4,5],[10,9,5],[8,3,5],[8,10,5],[8,4,7],[8,5,7],[8,8,7],[8,9,7],[9,3,5],[9,10,5],[9,4,7],[9,5,7],[9,8,7],[9,9,7]],
+      palette:{1:'#1a1208',2:'#f0e0a8',3:'#cdb26e',5:'#6a4a22',6:'#241608',7:'#ffffff',9:'#ff5a3a'}},
+    tengu:{name:'天狗', body:'kaiju',
+      overlay:[[0,4,0],[0,9,0],[1,4,0],[1,5,0],[1,8,0],[1,9,0],[0,6,1],[0,7,1],[1,6,1],[1,7,1],
+        [5,6,4],[6,6,4],[7,6,4],[7,7,4],[8,0,9],[9,0,9],[10,1,9],...ROBOT_STYLE_LEGS,[5,11,7],[5,12,7],[6,10,7],[6,11,5],[6,12,5],[6,13,7],[7,10,7],[7,11,5],[7,12,5],[7,13,7],[8,10,7],[8,11,5],[8,12,5],[8,13,7],[9,11,7],[9,12,7],[10,12,9],[11,12,9],[12,12,6]],
+      palette:{1:'#1a0505',2:'#c9502a',3:'#7a1f10',4:'#8a2a1a',5:'#4fc05a',6:'#fff3b0',7:'#1f6a2a',8:'#e8875a',9:'#22140a'}},
+    nekomusume:{name:'猫娘', body:'nekomusume', overlay:[],
+      palette:{1:'#1a1208',2:'#5a3a1e',3:'#ffd9b8',4:'#ffffff',5:'#e8527a',6:'#ff9db5',7:'#ff8fae',8:'#d8506e',9:'#ffd84a',10:'#ffb8d2',11:'#9fd8ff'}},
+    yamauba:{name:'山姥', body:'yamauba', overlay:[],
+      palette:{1:'#1a1208',2:'#e4e4ee',3:'#c8905e',4:'#6a3a8a',5:'#cdb67c',6:'#7a2a2a'}},
+    nopperabo:{name:'のっぺらぼう', body:'nopperabo', overlay:[],
+      palette:{1:'#1a1208',2:'#f4d9b4',3:'#2a2a3a',4:'#5a7a9a',5:'#c9a13a',6:'#fff8e0',7:'#7a5a3a',8:'#e0bd90'}},
+    tsuchigumo:{name:'土蜘蛛', body:'mukade', overlay:[],
+      palette:{1:'#0d0a14',2:'#5a4a8a',3:'#2e2450',6:'#3a2a3a',8:'#ff4a4a',9:'#ffd84a'}},
+    orochi:{name:'大蛇', body:'snake', overlay:[],
+      palette:{1:'#120a1e',2:'#5a3a8a',3:'#2e1a52',4:'#ffd84a',5:'#b79ae0',6:'#ff3a4a'}},
+    gashadokuro:{name:'がしゃドクロ', body:'gashadokuro', overlay:[],
+      palette:{1:'#2a2a2a',2:'#f1ecdc'}},
+  };
+  const portrait={};
+  CHAR_ORDER.forEach(id=>{
+    const c=CHAR_DB[id];
+    let grid=withOverlay(BODY_MAP[c.body], c.overlay);
+    if(c.flip) grid=grid.map(row=>row.slice().reverse());
+    portrait[id]=gridToSVG(grid, c.palette);
+  });
+
+  // ---- hidden type相性 (never shown to the player as numbers) ----
+  // NEXT[attacker] = array of defenders that attacker is strong against.
+  // Anything not listed either way is always neutral.
+  const NEXT={};  // 相性は廃止（全キャラ無相性）
+  // 目に見えない「どっしり度」。大きいほど、ひっくり返すのに必要な勢いが増える（全体で0〜6の小さな差）
+  const WEIGHT={hitokozo:-3,nopperabo:-3,tsuchigumo:2,orochi:3,chochin:-3,nekomusume:-2,yamauba:0,karakasa:-2,kappa:-1,rokurokubi:-1,yukionna:0,aooni:2,akaoni:2,tengu:2,omukade:3,gashadokuro:4,shutendoji:5};
+  // ---- ステータス（基準=100）。体の大きい妖怪はHP・防御が高め、女系は攻撃やや低め＆回避あり ----
+  // hp:体力 / atk:攻撃 / def:防御 / eva:回避率(%)
+  const STAT={
+    hitokozo:  {hp: 90, atk: 95, def: 90, eva: 5},
+    nopperabo: {hp: 90, atk: 95, def: 90, eva: 6},
+    tsuchigumo:{hp:116, atk:108, def:112, eva: 3},
+    orochi:    {hp:120, atk:110, def:112, eva: 2},
+    chochin:   {hp: 90, atk: 95, def: 90, eva: 5},
+    karakasa:  {hp: 95, atk:100, def:100, eva: 5},
+    kappa:     {hp:100, atk:100, def:100, eva: 3},
+    nekomusume:{hp: 92, atk: 92, def: 88, eva:18},
+    rokurokubi:{hp: 95, atk: 90, def: 90, eva:15},
+    yukionna:  {hp: 95, atk: 90, def: 90, eva:20},
+    tengu:     {hp:110, atk:105, def:105, eva: 5},
+    aooni:     {hp:115, atk:108, def:110, eva: 1},
+    akaoni:    {hp:118, atk:116, def:108, eva: 1},
+    yamauba:   {hp:105, atk: 98, def:100, eva: 8},
+    omukade:   {hp:115, atk:105, def:115, eva: 2},
+    gashadokuro:{hp:125, atk:100, def:130, eva: 1},
+    shutendoji:{hp:130, atk:115, def:120, eva: 1}
+  };
+  const CRIT_BASE=0.06, CRIT_SP=0.40, CRIT_MULT=1.6, DEF_UP=1.6, DEF_SP=2.0;
+  // 赤鬼は他の鬼より会心が出やすく、会心の威力も少し高い
+  const CRIT_BASE_OF={akaoni:0.13}, CRIT_SP_OF={akaoni:0.55}, CRIT_MULT_OF={akaoni:1.75};
+  function critRate(id,sp){ return sp ? (CRIT_SP_OF[id]??CRIT_SP) : (CRIT_BASE_OF[id]??CRIT_BASE); }
+  function critMult(id){ return CRIT_MULT_OF[id]??CRIT_MULT; }
+  function typeBonus(attacker, defender){
+    if((NEXT[attacker]||[]).includes(defender)) return 8;
+    if((NEXT[defender]||[]).includes(attacker)) return -8;
+    return 0;
+  }
+  const DUR=50;
+  const FRIC=0.985;              // 1フレームごとの減速。小さいほど遠くまで届く
+  const KF=(1-FRIC)*60;          // 距離1あたりの速度ロス
+  const ICON={"heart": {"rows": [".rr.rr.", "rhrrrrr", "rrrrrrr", ".rrrrr.", "..rrr..", "...r..."], "pal": {"r": "#e04848", "h": "#ffa0a0"}}, "heartOff": {"rows": [".rr.rr.", "rrrrrrr", "rrrrrrr", ".rrrrr.", "..rrr..", "...r..."], "pal": {"r": "#ffffff33"}}, "ticket": {"rows": [".kkkkkkkkk.", "kyyyrryyyyk", "kyyyrryyyyk", "kyyyrryyyyk", "kyyyrryyyyk", "kyyyrryyyyk", ".kkkkkkkkk."], "pal": {"k": "#5a3a1e", "y": "#ffcb47", "r": "#d33a3a"}}, "coin": {"rows": [".kkkkk.", "kyyyyyk", "kyykyyk", "kyykyyk", "kyykyyk", "kyyyyyk", ".kkkkk."], "pal": {"k": "#a5751a", "y": "#ffcb47"}}, "star": {"rows": ["...y...", "..yyy..", "yyyyyyy", ".yyyyy.", "..yyy..", ".yy.yy.", ".y...y."], "pal": {"y": "#ffd84a"}}, "lock": {"rows": ["..kkk..", ".k...k.", ".k...k.", "kkkkkkk", "kyyyyyk", "kyykyyk", "kyyyyyk", "kkkkkkk"], "pal": {"k": "#dddddd", "y": "#ffcb47"}}, "check": {"rows": ["......g", ".....gg", "g...gg.", "gg.gg..", ".ggg...", "..g...."], "pal": {"g": "#7be07b"}}, "play": {"rows": ["k....", "kk...", "kkk..", "kkkk.", "kkk..", "kk...", "k...."], "pal": {"k": "#ffcb47"}}, "book": {"rows": [".kkkkkkkkk.", "kwwwwkwwwwk", "kwbbwkwbbwk", "kwwwwkwwwwk", "kwbbwkwbbwk", "kwwwwkwwwwk", "kwwwwkwwwwk", ".kkkkkkkkk."], "pal": {"k": "#3a2410", "w": "#fff2c8", "b": "#8a5a20"}}, "card": {"rows": [".kkkkkk.", "kyyyyyyk", "kyrrrryk", "kyrwwryk", "kyrwwryk", "kyrrrryk", "kyyyyyyk", "kyyyyyyk", "kyyyyyyk", ".kkkkkk."], "pal": {"k": "#3a2410", "y": "#ffcb47", "r": "#d33a3a", "w": "#fff2c8"}}, "swords": {"rows": ["g.......g", ".g.....g.", "..g...g..", "...g.g...", "....k....", "...k.k...", "..k...k..", ".kk...kk.", "k.......k"], "pal": {"g": "#dfe8f3", "k": "#c98a3a"}}};
+  const KUJI_CLOSED=["..kkkkkkkk..", ".kwwwwwwwwk.", "kwwwwwwwwwwk", "kwwwrrrrwwwk", "kwwrrwwrrwwk", "kwwrwwwwrwwk", "kwwrwwwwrwwk", "kwwrrwwrrwwk", "kwwwrrrrwwwk", "kwwwwwwwwwwk", "kssssssssssk", "kwwwwwwwwwwk", ".kwwwwwwwwk.", "..kkkkkkkk.."];
+  const KUJI_OPEN=[".kkkkkkkkkkkkkk.", "kwrwwwwwwwwwwrwk", "krrrrrrrrrrrrrrk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "kwrccccccccccrwk", "krrrrrrrrrrrrrrk", "kwrwwwwwwwwwwrwk", ".kkkkkkkkkkkkkk."];
+  const KUJI_PAL={k:'#5a3a1e',w:'#fff2c8',s:'#e6cf95',r:'#d33a3a',c:'#3a6b3a'};
+  function pix(rows,pal,h){
+    const H=rows.length, W=rows[0].length; let r='';
+    rows.forEach((row,y)=>{ for(let x=0;x<W;x++){ const c=row[x]; if(c!=='.'&&pal[c]) r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${pal[c]}"/>`; } });
+    const ph=h||H*3, pw=Math.round(ph*W/H);
+    return `<svg viewBox="0 0 ${W} ${H}" width="${pw}" height="${ph}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${r}</svg>`;
+  }
+  const ico=(n,h)=>pix(ICON[n].rows,ICON[n].pal,h||16);
+
+  const DESC={
+    akaoni:'昔話「泣いた赤鬼」の主人公。人間と仲よくなりたいと願い続け、困っている人間を見過ごせない、まっすぐな正義感の持ち主。見た目は怖いが乱暴は大きらいで、力はあっても先に手を出さない。親友の青鬼が自分のために悪者を演じて去っていった過去を、今もずっと大切に胸に抱いている。人間の味方として、卑怯な相手には人一倍まっすぐ立ち向かう。',
+    aooni:'赤鬼のただ一人の親友。「人間と仲よくなりたい」という赤鬼の願いをかなえるため、自分からわざと村で暴れて悪者になり、赤鬼に退治させたあと、置き手紙だけを残してひっそり姿を消した。誰よりも情に厚く、自分を犠牲にしてでも友を助けようとする、鬼の中でも稀な心の持ち主。今も旅先で、こっそり赤鬼の様子を見守っているという噂がある。',
+    hitokozo:'額のまん中にぎょろりと光る一つ目を持つ、いたずら好きの子どもの妖怪。提灯の火をふっと消したり、道行く人の後ろにこっそり立ったりして、驚く顔を見るのが何よりの楽しみ。見た目にそぐわず素早く、相手の隙をつく駆け引きが得意。実はさみしがり屋で、驚かせた相手と最後は仲良く遊びたいだけだったりする。',
+    karakasa:'長年使われて捨てられた唐傘が、百年の時を経て魂を持った付喪神（つくもがみ）。一本足でぴょんぴょんと跳ねまわり、長い舌をベロリと出して人を驚かせる。古い道具を粗末に扱うと化けて出る、という戒めから生まれた妖怪ともいわれる。見た目はひょうきんだが、跳躍力を活かした変則的な動きで相手を翻弄するのが得意。',
+    kappa:'川や沼にすむ、いたずら好きな水辺の妖怪。頭のお皿に水がある間は怪力を発揮するが、乾くと途端に力が抜けてしまうという弱点を持つ。大の相撲好きで、通りかかった人間によく勝負を挑む律儀な一面もある。きゅうりが大好物で、お礼にきゅうりを供えると悪さをしないとも伝えられている。',
+    nekomusume:'人間の女性の姿に、ぴんと立った猫の耳と長いしっぽを持つ妖怪。年を重ねた猫が化けたとも言われ、夜になるとしなやかな身のこなしで屋根の上や塀の上を音もなく歩きまわる。気まぐれで人なつっこいかと思えば、急にそっぽを向くつかみどころのない性格。爪を立てた素早いひっかきは、近づかれると思わぬ痛手になる。',
+    rokurokubi:'昼間は人間の女性とまったく見分けがつかないが、夜眠っているすきに首がにゅるにゅると長く伸びていく妖怪。伸びた首は自在に動き回り、遠くの物をのぞき見たり、驚かせたりする。本人に自覚がない場合も多いと伝えられ、正体を知られてもどこか涼しい顔をしている、つかみどころのない妖怪。',
+    yukionna:'雪の降りしきる夜にふわりと現れる、白い着物をまとった美しい女性の妖怪。冷たい息を吹きかけて人を凍りつかせるが、その正体は寂しがり屋だとも言われる。ある約束を破った人間の前には二度と姿を見せない、という言い伝えがあり、静かで儚げな見た目とは裏腹に、芯の強さを秘めている。',
+    shutendoji:'大江山（あるいは伊吹山）に棲むと伝わる、鬼たちの頭領。大きな盃でお酒を飲み交わすのを何より好み、上機嫌な時ほど油断のならない大鬼として恐れられている。人間の姿に化けて都をさまよったという伝承もあり、力だけでなく知恵も併せ持つ、鬼の中の鬼。',
+    omukade:'山をも取り巻くほど巨大だと伝わる、伝説の大百足。琵琶湖のほとり、三上山に棲み着いていたと語り継がれ、弓の名手が挑んだという言い伝えも残る。無数の足で地を這うように迫るその姿は、一度狙いを定めた相手をどこまでも追い詰める執念深さの象徴。',
+    chochin:'古くなった提灯が化けたお化け提灯。夜道でふわりと浮かび上がり、大きな一つ目をカッと見開いて通行人を驚かせる。中の蝋燭の火がそのまま魂になったとも言われ、消えそうで消えない、あやしい灯りをともし続ける。',
+    tengu:'深い山にすむ、赤い顔と長い鼻が特徴の妖怪。羽団扇であおいで大風を巻き起こし、山から山へと自在に飛び回る。厳しい修行の果てになるとも伝えられ、力比べも知恵比べも一筋縄ではいかない、山の守り主のような存在。',
+    yamauba:'深い山奥にひとりで暮らすと伝わる、白髪の老女の妖怪。道に迷った旅人を一晩泊めてくれる親切な一面もあれば、油断した相手に襲いかかるともいわれ、どちらが本当の顔なのかは誰にも分からない。長年の山暮らしで鍛えられた身のこなしは見た目以上にすばやく、近づいてきた相手には容赦のない連続攻撃を見舞う。',
+    nopperabo:'目も鼻も口もない、つるりとした顔を持つ妖怪。夜道で泣いている人に声をかけると、ゆっくり振り向いて驚かせるという。顔こそ不気味だが、人をおどかすだけで乱暴はしない、ちょっとさびしがり屋。何を考えているのか読めない無表情で、相手の出方をじっと見つめて間合いを詰めてくる。',
+    tsuchigumo:'古い洞窟や山の奥にひそむと伝わる、巨大な蜘蛛の妖怪。八本の足を広げて、白い糸の網で獲物をからめとる。糸をたぐって相手の懐に入りこみ、近くから立て続けに攻撃をしかける得意技を持つ、知恵のはたらく手ごわい相手。',
+    orochi:'沼や谷の奥に棲むと伝わる、山のように大きな蛇の妖怪。とぐろを巻いたまま鎌首をもたげ、じっと獲物を見すえる。ひとたび牙をむくと、会心の一撃で相手を一気にねじふせる。その力は鬼たちにも引けを取らないと恐れられている。',
+    gashadokuro:'弔われなかった者たちの骨が寄り集まってできたと伝わる、山よりも大きな骸骨の妖怪。夜更けにガチガチと骨を鳴らしながら歩き回り、その音を聞いた者に災いをもたらすという。あまりの大きさに、近づいても全身を見渡すことすら難しい。',
+  };
+  const KUJI_W={akaoni:1,aooni:3,hitokozo:4,karakasa:4,kappa:4,rokurokubi:3,yukionna:3,nekomusume:4,shutendoji:2,omukade:1,yamauba:3,nopperabo:4,tsuchigumo:2,orochi:1,
+    chochin:3,tengu:2,gashadokuro:1};
+  const STAGES=[
+    {enemy:'akaoni', title:'村はずれの赤鬼', story:'村はずれの家で、人間と友だちになりたい心やさしい赤鬼が待っていた。'},
+    {enemy:'hitokozo', title:'夜道のいたずら', story:'提灯の消えた夜道で、ぎょろりと光る一つ目。「おいらとめんこで勝負だ！」'},
+    {enemy:'nopperabo', title:'夜道の知らない顔', story:'夜道で泣いている人に声をかけると、ゆっくり振り向いた顔には、目も鼻も口もなかった。'},
+    {enemy:'chochin', title:'夜道の灯り', story:'誰もいないはずの夜道に、ふわりと灯る提灯の明かり。近づくと、大きな一つ目がこちらをじっと見つめていた。'},
+    {enemy:'kappa', title:'川辺の相撲場', story:'川辺で待ちかまえていた河童。「相撲もいいが、めんこで決めよう！」'},
+    {enemy:'karakasa', title:'雨宿りの古傘', story:'雨宿りの軒先で、古い唐傘がぴょんと跳ねた。「わっちを倒せるかい？」'},
+    {enemy:'nekomusume', title:'月夜の屋根の上', story:'月明かりの屋根の上で、猫の耳をぴくぴくさせた少女が振り向いた。「にゃふふ、あたしと遊んでくれるの？」'},
+    {enemy:'yukionna', title:'吹雪の峠', story:'吹雪の峠に白い影。「ここを通りたければ、私に勝ってからね」'},
+    {enemy:'rokurokubi', title:'長首の宿', story:'古い宿の廊下で、首がにゅーっと伸びてきた。「ふふ、遊んでいきなさいな」'},
+    {enemy:'yamauba', title:'山奥の一軒家', story:'山奥の一軒家から、白髪の老婆がぬっと顔を出した。「おや、お客さんかい。ひひひ、ゆっくりしておいき」'},
+    {enemy:'aooni', title:'悪者のふり', story:'村で暴れているのは、赤鬼の親友の青鬼だった。その目は、どこかやさしい。「さあ、かかってこい！」'},
+    {enemy:'tengu', title:'山伏との出会い', story:'深い山道で、赤い顔に長い鼻の山伏姿の者に呼び止められた。只者ではない気配に、思わずめんこを構える。'},
+    {enemy:'tsuchigumo', title:'糸だらけの洞窟', story:'山の洞窟の奥は白い糸でいっぱい。ぬっと現れた大きな蜘蛛が、八本の足を広げた。'},
+    {enemy:'omukade', title:'大百足の洞窟', story:'洞窟の奥でうごめく大百足。地鳴りとともに勝負を挑んできた！'},
+    {enemy:'orochi', title:'沼の主', story:'静かな沼の水面がざわりと揺れ、巨大な蛇がとぐろを巻いたまま、ゆっくりと鎌首をもたげた。'},
+    {enemy:'gashadokuro', title:'骨鳴りの丘', story:'丘の向こうから、ガチガチと骨が鳴る音が近づいてくる。見上げるほど大きな骸骨が、静かに見下ろしていた。'},
+    {enemy:'shutendoji', title:'酒呑童子の間', story:'ついに大広間。盃を傾ける酒呑童子が、にやりと笑った。「最後の勝負だ！」'}
+  ];
+
+  // ===================== SAVE =====================
+  const $=id=>document.getElementById(id);
+  const KEY='youkaiMenkoSave2';
+  const KUJI_COST=100;
+  let save={inv:{},seen:{},money:500,cleared:{},clearedE:{}};
+  try{ const s=localStorage.getItem(KEY); if(s){ const o=JSON.parse(s); if(o.money===undefined&&typeof o.tickets==='number') o.money=o.tickets*KUJI_COST; delete o.tickets; save=Object.assign(save,o); } }catch(e){}
+  if(Object.keys(save.cleared||{}).length && !Object.keys(save.clearedE||{}).length){
+    const OLD=['hitokozo','karakasa','kappa','rokurokubi','yukionna','omukade','akaoni','shutendoji'];
+    save.clearedE={}; Object.keys(save.cleared).forEach(i=>{ if(save.cleared[i]&&OLD[i]) save.clearedE[OLD[i]]=true; }); save.cleared={};
+  }
+  function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(save)); }catch(e){} }
+  const count=id=>save.inv[id]||0;
+  function addCard(id){ save.inv[id]=count(id)+1; save.seen[id]=true; persist(); }
+  function useUp(id){ save.inv[id]=Math.max(0,count(id)-1); persist(); }
+  const total=()=>CHAR_ORDER.reduce((a,id)=>a+count(id),0);
+  function rescue(){ if(save.money<KUJI_COST && total()<=0){ save.money=KUJI_COST; persist(); return true; } return false; }
+  const RARE=CHAR_ORDER.filter(id=>(KUJI_W[id]||1)<=1);   // 隠しレア枠（対戦モードは入手済みでないと使えない）
+  const versusPool=()=>CHAR_ORDER.filter(id=>!RARE.includes(id)||save.seen[id]);
+
+  // ===================== SCREENS =====================
+  const SCREENS=['home','kuji','scenario','versus','zukan','pick','battle','result'];
+  let backFn=()=>show('home');
+  function show(id){
+    SCREENS.forEach(s=>$(s).classList.toggle('hidden',s!==id));
+    $('tickets').textContent=save.money;
+    document.body.classList.toggle('inBattle', id==='battle');
+    $('backBtn').style.visibility = id==='home'?'hidden':'visible';
+    backFn = ()=>{ if(id==='pick'){ pickBack(); } else if(id==='battle'){ } else show('home'); };
+    window.scrollTo(0,0);
+  }
+  $('backBtn').onclick=()=>backFn();
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  function go(id){
+    if(id==='kuji') openKuji();
+    else if(id==='scenario') openScenario();
+    else if(id==='zukan') openZukan();
+    else show(id);
+  }
+  function chip(id, opts){
+    opts=opts||{};
+    const d=document.createElement('div');
+    d.className='chip'+(opts.off?' off':'');
+    d.innerHTML=portrait[id]+`<div class="nm">${CHAR_DB[id].name}</div>`+(opts.count?`<div class="cnt">×${opts.count}</div>`:'');
+    if(opts.onclick) d.onclick=opts.onclick;
+    return d;
+  }
+  function showResult(html, btns){
+    $('resultMsg').innerHTML=html;
+    const b=$('resultBtns'); b.innerHTML='';
+    btns.forEach(([label,fn])=>{ const x=document.createElement('button'); x.className='big'; x.textContent=label; x.onclick=fn; b.appendChild(x); });
+    show('result');
+  }
+
+  // ===================== KUJI =====================
+  let kujiBusy=false;
+  const ticketClosed=()=>pix(KUJI_CLOSED,KUJI_PAL,112);
+  function openKuji(){
+    rescue(); kujiBusy=false; show('kuji');
+    $('ticketWrap').innerHTML=ticketClosed();
+    $('reveal').innerHTML= save.money>=KUJI_COST ? '' : 'お金が足りません。100円たまると1回引けるよ。シナリオの初クリアボーナスなどでお金がもらえる。';
+    renderKujiInv(); updateOpenBtn();
+  }
+  function updateOpenBtn(){
+    const b=$('openBtn'); b.disabled = kujiBusy || save.money<KUJI_COST;
+    b.textContent = save.money>=KUJI_COST ? 'くじをひらく！（100円）' : 'お金が足りない';
+    $('tickets').textContent=save.money;
+  }
+  function renderKujiInv(){
+    const inv=$('kujiInv'); inv.innerHTML='';
+    let any=false;
+    CHAR_ORDER.forEach(id=>{ if(count(id)>0){ any=true; inv.appendChild(chip(id,{count:count(id)})); } });
+    if(!any) inv.innerHTML='<div class="label">まだ持っていません</div>';
+  }
+  $('openBtn').onclick=()=>{
+    if(kujiBusy||save.money<KUJI_COST) return;
+    kujiBusy=true; save.money-=KUJI_COST; persist(); updateOpenBtn();
+    const pool=[]; CHAR_ORDER.forEach(id=>{ for(let i=0;i<(KUJI_W[id]||1);i++) pool.push(id); });
+    const id=pool[Math.floor(Math.random()*pool.length)];
+    $('reveal').innerHTML='';
+    $('ticketWrap').innerHTML=`<div class="shake">${ticketClosed()}</div>`;
+    setTimeout(()=>{
+      const isNew=count(id)===0; addCard(id);
+      const rare=(KUJI_W[id]||1)<=1;
+      $('ticketWrap').innerHTML=`<div class="tkOpen pop">${pix(KUJI_OPEN,KUJI_PAL,112)}<div class="tkChar">${portrait[id]}</div></div>`;
+      const st=ico('star',14);
+      $('reveal').innerHTML=`<div>${rare?st+' 大当たり！ '+st+'<br>':''}<b>${CHAR_DB[id].name}</b></div><div class="label">${isNew?'NEW！初ゲット':'ダブり！これで'+count(id)+'枚めになった'}</div>`;
+      kujiBusy=false; renderKujiInv(); updateOpenBtn();
+    },800);
+  };
+
+  // ===================== PICK =====================
+  let pickBack=()=>show('home');
+  function openPick(title, onPick, onBack){
+    pickBack=onBack||(()=>show('home'));
+    $('pickTitle').textContent=title;
+    const list=$('pickList'); list.innerHTML=''; $('pickMsg').textContent=''; $('pickSlots').innerHTML=''; $('pickBtns').innerHTML='';
+    let any=false;
+    CHAR_ORDER.forEach(id=>{ if(count(id)>0){ any=true; list.appendChild(chip(id,{count:count(id),onclick:()=>onPick(id)})); } });
+    if(!any){
+      $('pickMsg').innerHTML='使えるめんこがない！くじを引こう。';
+      const b=document.createElement('button'); b.className='big'; b.textContent='くじ引きへ'; b.onclick=()=>openKuji(); list.appendChild(b);
+    }
+    show('pick');
+  }
+
+  // ===================== SCENARIO =====================
+  let mode=null, stageIdx=0, lives={you:3,cpu:3};
+  function openScenario(){
+    const list=$('stageList'); list.innerHTML='';
+    STAGES.forEach((st,i)=>{
+      const open = i===0 || save.clearedE[STAGES[i-1].enemy];
+      const cl=save.clearedE[st.enemy];
+      const b=document.createElement('button');
+      b.className='stage'+(open?'':' locked')+(cl?' clear':'');
+      b.innerHTML=(cl?ico('check',14):open?ico('play',14):ico('lock',14))+` 第${i+1}話 ${st.title}　`+ico('star',12).repeat(1+Math.floor(i/2));
+      if(open) b.onclick=()=>startStage(i);
+      list.appendChild(b);
+    });
+    show('scenario');
+  }
+  function startStage(i){
+    stageIdx=i; const st=STAGES[i];
+    showResult(`<div class="pb">${portrait[st.enemy]}</div><b>第${i+1}話 ${st.title}</b><br>${st.story}`,
+      [['たたかう！',()=>choose()],['やめる',()=>openScenario()]]);
+    function choose(){ mode='scenario'; openPick('使うめんこを選ぼう', id=>beginDuel(id,st.enemy), ()=>openScenario()); }
+  }
+
+  // ===================== VERSUS（3体勝ち抜き戦） =====================
+  const ROLES=['先鋒','中堅','大将'];
+  let team={A:[],B:[]}, cur={A:0,B:0};
+  const isVersus=()=>mode==='versus'||mode==='versus2p';
+  const mkMember=id=>({id, hp:STAT[id].hp, used:false, defLeft:defMax(id), turns:0, dead:false});
+  function randomTeam(){
+    const a=CHAR_ORDER.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a.slice(0,3);
+  }
+  function pickTeam(title,onDone,onBack){
+    pickBack=onBack||(()=>show('versus'));
+    const sel=[], list=$('pickList'), slots=$('pickSlots'), btns=$('pickBtns');
+    function mk(label,fn){ const b=document.createElement('button'); b.className='big spBtn'; b.textContent=label; b.onclick=fn; return b; }
+    function render(){
+      $('pickTitle').textContent=title; $('pickMsg').textContent='';
+      slots.innerHTML=ROLES.map((r,i)=>`<div class="slot${i===sel.length?' next':''}"><span>${r}</span><b>${sel[i]?CHAR_DB[sel[i]].name:'—'}</b></div>`).join('');
+      list.innerHTML='';
+      versusPool().forEach(id=>{
+        const taken=sel.includes(id);
+        list.appendChild(chip(id,{off:taken,onclick:()=>{ if(taken||sel.length>=3) return; sel.push(id); render(); }}));
+      });
+      btns.innerHTML='';
+      if(sel.length) btns.appendChild(mk('ひとつ戻す',()=>{ sel.pop(); render(); }));
+      if(sel.length===3) btns.appendChild(mk('この3体で決定！',()=>onDone(sel.slice())));
+    }
+    render(); show('pick');
+  }
+  $('versusStart').onclick=()=>{
+    mode='versus';
+    pickTeam('先鋒・中堅・大将の順に、使う3体をえらぼう', ids=>startMatch(ids,randomTeam()), ()=>show('versus'));
+  };
+  $('versus2pStart').onclick=()=>{
+    mode='versus2p'; pick2p();
+  };
+  function pick2p(){
+    pickTeam('1Pのチーム：先鋒・中堅・大将の順に3体えらぼう', a=>{
+      pickTeam('2Pのチーム：先鋒・中堅・大将の順に3体えらぼう', b=>startMatch(a,b), ()=>pick2p());
+    }, ()=>show('versus'));
+  }
+  const firstOf=k=>k==='A'?'player':(isTwoP()?'p2':'cpu');
+  function startMatch(idsA,idsB){
+    team.A=idsA.map(mkMember); team.B=idsB.map(mkMember); cur={A:0,B:0};
+    let first='player'; if(isTwoP()){ if(p2First) first='p2'; p2First=!p2First; }
+    beginBout(first);
+  }
+  function beginBout(first){
+    const a=team.A[cur.A], b=team.B[cur.B];
+    beginDuel(a.id,b.id,{first,carry:{A:a,B:b}});
+  }
+  function versusBoutEnd(aWon){
+    const wk=aWon?'A':'B', lk=aWon?'B':'A';
+    const w=team[wk][cur[wk]], l=team[lk][cur[lk]];
+    w.hp=Math.max(1,hp[wk]); w.used=used[wk]; w.defLeft=defLeft[wk]; w.turns=turnsTaken[wk];
+    l.hp=0; l.dead=true;
+    const roleL=ROLES[cur[lk]]; cur[lk]++;
+    const nm=k=>k==='A'?nmA():nmB();
+    const wn=CHAR_DB[w.id].name, ln=CHAR_DB[l.id].name;
+    let html=`<div class="pb">${portrait[w.id]}</div><span class="win-title">${nm(wk)}の${wn}の勝ち！</span><br>${nm(lk)}の${roleL}・${ln}が倒れた！<br>${wn}の残りHP ${w.hp}/${maxHP(w.id)}`;
+    let btns;
+    if(cur[lk]>=3){
+      if(isTwoP()){
+        html+=`<br><br><span class="win-title">${nm(wk)}のチームの勝利！</span>`;
+      } else if(wk==='A'){
+        html+=`<br><br><span class="win-title">対戦に勝利した！</span>`;
+      } else {
+        html+=`<br><br><span class="lose-title">対戦に敗北…</span>`;
+      }
+      btns=[['もう一度対戦',()=>{ (isTwoP()?$('versus2pStart'):$('versusStart')).onclick(); }],['対戦メニューへ',()=>show('versus')],['ホームへ',()=>show('home')]];
+    } else {
+      html+=`<br><br>つぎは${nm(lk)}の${ROLES[cur[lk]]}${(lk==='B'&&!isTwoP())?'':'・'+CHAR_DB[team[lk][cur[lk]].id].name}が登場！（${nm(lk)}の先攻）`;
+      btns=[['つぎの勝負',()=>beginBout(firstOf(lk))]];
+    }
+    showResult(html,btns);
+  }
+
+  // ===================== ZUKAN =====================
+  function openZukan(){
+    const g=$('zukanGrid'); g.innerHTML='';
+    CHAR_ORDER.forEach(id=>{
+      if(save.seen[id]){
+        g.appendChild(chip(id,{count:count(id)||0,onclick:()=>{
+          $('zukanDetail').innerHTML=`<div class="pb">${portrait[id]}</div><b>${CHAR_DB[id].name}</b>（持ち枚数：${count(id)}）<div class="statTbl"><span>体力<b>${STAT[id].hp}</b></span><span>攻撃<b>${STAT[id].atk}</b></span><span>防御<b>${STAT[id].def}</b></span><span>回避<b>${STAT[id].eva}%</b></span><span>防御アップ<b>${defMax(id)}回</b></span></div><span style="font-size:.72rem">必殺技「${SP[id].name}」：${SP[id].desc}</span><br>${DESC[id]}`;
+        }}));
+      } else {
+        const d=chip(id,{off:true}); d.classList.add('sil'); d.querySelector('.nm').textContent='？？？';
+        d.onclick=()=>{ $('zukanDetail').textContent='まだ手に入れていない妖怪だ。くじや対戦でゲットしよう！'; };
+        g.appendChild(d);
+      }
+    });
+    $('zukanDetail').textContent='気になる妖怪をタップしてみよう';
+    show('zukan');
+  }
+
+  // ===================== BATTLE =====================
+  const arenaEl=$('arena'), elA=$('cardA'), elB=$('cardB');
+  let myId=null, cpuId=null;
+  let R=150, C={x:150,y:150}, HIT=44, EDGE=14;
+  const MAX_PULL_RATIO=0.4;
+  const DMG_SCALE=0.4;   // 通常攻撃の威力係数（以前は0.75で強すぎた）
+  let posA={x:0,y:0}, posB={x:0,y:0}, startA, startB, lastAnchorA=null;
+  let turn='player', animating=false;
+  let dragging=false, dragAnchor=null, dragStartClient=null, dragWho='A', p2First=false;
+
+  function layoutArena(){
+    const rect=arenaEl.getBoundingClientRect();
+    if(!rect.width) return;
+    R=rect.width/2; C={x:R,y:R};
+    HIT=Math.max(34,R*0.3); EDGE=Math.max(10,R*0.09);
+    startA={x:C.x, y:C.y+R*0.55};
+    startB={x:C.x, y:C.y-R*0.55};
+    if(!animating && !dragging){ posA={...startA}; posB={...startB}; draw(); }
+  }
+  window.addEventListener('resize', layoutArena);
+  function setGauge(){}
+  function draw(scaleA,scaleB){
+    elA.style.transform=`translate(${posA.x}px,${posA.y}px) scale(${scaleA||1})`;
+    elB.style.transform=`translate(${posB.x}px,${posB.y}px) scale(${scaleB||1})`;
+  }
+  const isTwoP=()=>mode==='versus2p';
+  // ---- HP・ダメージ ----
+  let hp={A:100,B:100,mA:100,mB:100}, lastHit=null;
+  const maxHP=id=>STAT[id].hp;
+  function updateHP(){
+    ['A','B'].forEach(k=>{
+      $('hpName'+k).textContent=(k==='A'?(isTwoP()?'1P':'あなた'):(isTwoP()?'2P':'CPU'))+(guard[k]?' 防御中':'');
+      $('hpNum'+k).textContent=Math.max(0,hp[k]);
+    });
+    renderStats();
+  }
+  function statHTML(k){
+    const id=idOf(k); if(!id) return '';
+    const st=STAT[id], gm=guard[k]==='up'?DEF_UP:guard[k]==='sp'?DEF_SP:0;
+    const d=gm?`<span class="up">${Math.round(st.def*gm)}↑</span>`:st.def;
+    const cr=Math.round(critRate(id,SP[id].kind==='crit')*100);
+    return `<span>攻撃<b>${st.atk}</b></span><span>防御<b>${d}</b></span><span>回避<b>${st.eva}%</b></span><span>会心<b>${cr}%</b></span><span>防御アップ残<b>${defLeft[k]}</b></span>`;
+  }
+  function renderStats(){
+    if(!$('statA')) return;
+    $('statA').innerHTML=statHTML('A'); $('statB').innerHTML=statHTML('B');
+  }
+  // 当てた角度(cos)が正面に近いほどダメージ大。かすめると小さい
+  function calcDamage(P,c,bonus){
+    c=Math.max(0,Math.min(1,c));
+    const mult=bonus>0?1.25:bonus<0?0.8:1;
+    return Math.max(1,Math.round(P*DMG_SCALE*(0.25+0.75*c)*mult));
+  }
+  // ---- 妖怪ごとの必殺技（1回の対戦で1回まで） ----
+  const SP={
+    akaoni:{name:'鬼の一撃',kind:'crit',desc:'当たると会心の一撃がとても出やすい（ダメージ1.75倍・防御無視）。ふだんの攻撃でも会心が出やすい'},
+    aooni:{name:'鬼の一撃',kind:'crit',desc:'当たると会心の一撃が出やすい（ダメージ1.6倍・防御無視）'},
+    shutendoji:{name:'大鬼の一撃',kind:'crit',desc:'当たると会心の一撃が出やすい（ダメージ1.6倍・防御無視）'},
+    yukionna:{name:'凍てつく吹雪',kind:'freeze',desc:'当たると相手が凍り、2回連続で行動できる（この技の攻撃力は半分）'},
+    nopperabo:{name:'すっと近づく',kind:'approach',desc:'相手のすぐ近くまで移動できる（そのまま投げられる）'},
+    tsuchigumo:{name:'蜘蛛の糸',kind:'double',desc:'当たると2回連続で行動できる。近くから当てるほど威力が増す（この技の攻撃力は半分、近いと最大0.9倍）'},
+    orochi:{name:'大蛇の牙',kind:'crit',desc:'当たると会心の一撃が出やすい（ダメージ1.6倍・防御無視）'},
+    hitokozo:{name:'ひとっ飛び',kind:'approach',desc:'相手のすぐ近くまで移動できる（そのまま投げられる）'},
+    karakasa:{name:'傘をひらく',kind:'guard',desc:'次の相手の攻撃まで防御力が2倍になる（そのまま投げられる）'},
+    gashadokuro:{name:'骨の壁',kind:'guard',desc:'次の相手の攻撃まで防御力が2倍になる（そのまま投げられる）'},
+    yamauba:{name:'山姥の連続攻撃',kind:'double',desc:'当たると2回連続で行動できる。近くから当てるほど威力が増す（この技の攻撃力は半分、近いと最大0.9倍）'},
+    nekomusume:{name:'猫の連続ひっかき',kind:'double',desc:'当たると2回連続で行動できる。近くから当てるほど威力が増す（この技の攻撃力は半分、近いと最大0.9倍）'},
+    rokurokubi:{name:'首のばし',kind:'far',desc:'遠くから当てるほどダメージが増える（最大1.8倍）'},
+    kappa:{name:'水かき突進',kind:'near',desc:'近くから当てるほどダメージが増える（最大1.8倍）'},
+    omukade:{name:'毒牙のかみつき',kind:'near',desc:'近くから当てるほどダメージが増える（最大1.8倍）'},
+    tengu:{name:'神通力の風',kind:'wind',desc:'追い風で勢いが1.3倍になる'},
+    chochin:{name:'鬼火',kind:'fire',desc:'当たれば、かすっても炎で+5ダメージ'}
+  };
+  let turnsTaken={A:0,B:0};
+  const SP_MIN_TURN=1; // 必殺技は2ターン目以降（自分が1回行動した後）から
+  const spReady=k=>turnsTaken[k]>=SP_MIN_TURN;
+  let used={A:false,B:false}, armed={A:null,B:null}, guard={A:false,B:false};
+  // 防御アップの残り回数（通常2回。防御系の必殺技を持つ妖怪は必殺技の意味が薄いので3回）
+  const defMax=id=>SP[id]&&SP[id].kind==='guard'?3:2;
+  let defLeft={A:2,B:2};
+  const idOf=k=>k==='A'?myId:cpuId;
+  function clampIn(x,y){ const lim=R-EDGE*2.2, d=Math.hypot(x-C.x,y-C.y); return d>lim?{x:C.x+(x-C.x)/d*lim,y:C.y+(y-C.y)/d*lim}:{x,y}; }
+  function useSpecial(k){
+    if(used[k]||armed[k]||!spReady(k)) return false;
+    const sp=SP[idOf(k)]; used[k]=true;
+    const me=k==='A'?posA:posB, tg=k==='A'?posB:posA;
+    if(sp.kind==='approach'){
+      let dx=me.x-tg.x, dy=me.y-tg.y, d=Math.hypot(dx,dy)||1;
+      const np=clampIn(tg.x+dx/d*HIT*2.1, tg.y+dy/d*HIT*2.1);
+      if(k==='A'){ posA=np; lastAnchorA={...np}; } else { posB=np; lastAnchorB={...np}; }
+      draw(); $('msg').textContent=`${sp.name}！相手のすぐ近くに移動した。そのまま投げよう！`;
+    } else if(sp.kind==='guard'){
+      guard[k]='sp'; updateHP();
+      $('msg').textContent=`${sp.name}！次の攻撃まで防御力が2倍！そのまま投げよう！`;
+    } else {
+      armed[k]=sp.kind; $('msg').textContent=`${sp.name}！${sp.desc}　引っぱって投げよう！`;
+    }
+    updateSpBtn(); return true;
+  }
+  function useDefUp(k){
+    if(defLeft[k]<=0||guard[k]) return false;
+    defLeft[k]--; guard[k]='up';
+    const nm=k==='A'?nmA():nmB();
+    $('msg').textContent=`${nm}は身がまえた！次の相手の攻撃まで防御力アップ！そのまま投げよう！（残り${defLeft[k]}回）`;
+    updateHP(); updateSpBtn(); return true;
+  }
+  function updateSpBtn(){
+    const b=$('spBtn'); if(!b) return;
+    const k=turn==='p2'?'B':'A', sp=SP[idOf(k)]; if(!sp) return;
+    const mine=turn==='player'||turn==='p2';
+    b.classList.toggle('armed',!!armed[k]&&mine);
+    b.textContent=used[k]?(armed[k]&&mine?`必殺技：${sp.name} 準備OK！`:`必殺技：${sp.name}（使用済み）`):(!spReady(k)?`必殺技：${sp.name}（2ターン目から）`:`必殺技：${sp.name}`);
+    b.disabled=!mine||used[k]||!spReady(k)||animating||dragging;
+    const db=$('defBtn');
+    if(db){ db.textContent=`防御アップ（残り${defLeft[k]}回）`; db.disabled=!mine||defLeft[k]<=0||!!guard[k]||animating||dragging; db.classList.toggle('armed',guard[k]==='up'&&mine); }
+  }
+  $('spBtn').addEventListener('click',()=>{
+    if(animating||dragging) return;
+    if(turn!=='player'&&turn!=='p2') return;
+    useSpecial(turn==='p2'?'B':'A');
+  });
+  $('defBtn').addEventListener('click',()=>{
+    if(animating||dragging) return;
+    if(turn!=='player'&&turn!=='p2') return;
+    useDefUp(turn==='p2'?'B':'A');
+  });
+  const angleLabel=c=>c>=0.85?'正面ヒット！':c>=0.55?'ナイスヒット':'かすっただけ…';
+  function setTurnBadge(){
+    const b=$('turnBadge');
+    if(turn==='player'){ b.textContent=isTwoP()?'1Pの番':'あなたの番'; b.className='turnBadge you'; }
+    else if(turn==='p2'){ b.textContent='2Pの番'; b.className='turnBadge cpu'; }
+    else { b.textContent='CPUの番'; b.className='turnBadge cpu'; }
+    elA.style.zIndex = turn==='player'?3:''; elB.style.zIndex = turn==='p2'?3:'';
+    elA.style.cursor = turn==='player'?'grab':''; elB.style.cursor = turn==='p2'?'grab':'';
+    updateSpBtn();
+  }
+  const hearts=n=>Array.from({length:3},(_,i)=>ico(i<n?'heart':'heartOff',14)).join(' ');
+  function teamBar(k){
+    const label=k==='A'?nmA():nmB(), hide=(k==='B'&&!isTwoP());
+    return `<div class="teamRow"><span class="tl">${label}</span>`+team[k].map((m,i)=>{
+      const st=m.dead?'dead':(i===cur[k]?'cur':'');
+      const n=(hide&&i>cur[k])?'？？？':CHAR_DB[m.id].name;
+      return `<span class="tm ${st}"><i>${ROLES[i]}</i>${n}</span>`;
+    }).join('')+`</div>`;
+  }
+  function infoText(){
+    return isVersus() ? teamBar('B')+teamBar('A') : `第${stageIdx+1}話 ${STAGES[stageIdx].title}`;
+  }
+
+  function beginDuel(mine, enemy, opt){
+    const o=opt||{}; myId=mine; cpuId=enemy;
+    cpuLevel = mode==='scenario' ? Math.min(7, Math.round(stageIdx*7/(STAGES.length-1))) : 4;
+    show('battle');
+    $('battleInfo').innerHTML=infoText();
+    turn=o.first||'player';
+    const cA=o.carry&&o.carry.A, cB=o.carry&&o.carry.B;
+    turnsTaken={A:cA?cA.turns:0,B:cB?cB.turns:0};
+    used={A:cA?cA.used:false,B:cB?cB.used:false};
+    armed={A:null,B:null}; guard={A:false,B:false};
+    defLeft={A:cA?cA.defLeft:defMax(myId),B:cB?cB.defLeft:defMax(cpuId)};
+    elA.style.filter=elB.style.filter='';
+    hp={A:cA?cA.hp:maxHP(myId),B:cB?cB.hp:maxHP(cpuId),mA:maxHP(myId),mB:maxHP(cpuId)}; lastHit=null; updateHP();
+    animating=false; setTurnBadge(); setGauge(0);
+    layoutArena();
+    elA.innerHTML=portrait[myId]; elB.innerHTML=portrait[cpuId];
+    elA.classList.remove('flipping'); elB.classList.remove('flipping');
+    posA={...startA}; posB={...startB}; lastAnchorA={...startA}; lastAnchorB={...startB}; draw();
+    $('msg').textContent = isVersus()
+      ? `${ROLES[cur.A]}・${CHAR_DB[myId].name} VS ${ROLES[cur.B]}・${CHAR_DB[cpuId].name}　タップして引っぱろう！`
+      : `${CHAR_DB[myId].name} VS ${CHAR_DB[cpuId].name}　タップして引っぱろう！`;
+    if(turn==='cpu') setTimeout(cpuThrow,1000);
+  }
+
+  function finishDuel(win){
+    animating=false;
+    if(isVersus()){ versusBoutEnd(win); return; }
+    const enemyName=CHAR_DB[cpuId].name, myName=CHAR_DB[myId].name;
+    let html='', btns=[];
+    if(win){
+      addCard(cpuId); persist();
+      html=`<div class="pb">${portrait[cpuId]}</div><span class="win-title">勝利！${enemyName}のめんこをゲット！</span><br>（${enemyName}：${count(cpuId)}枚）`;
+      const first=!save.clearedE[STAGES[stageIdx].enemy];
+      save.clearedE[STAGES[stageIdx].enemy]=true; if(first) save.money+=20;
+      if(first) html+='<br>初クリアボーナス！20円ゲット！';
+      if(stageIdx===STAGES.length-1 && first) html+='<br><span class="win-title">'+ico('star',14)+' 全話クリア！おめでとう！ '+ico('star',14)+'</span>';
+      if(stageIdx<STAGES.length-1) btns.push(['つぎの話へ',()=>startStage(stageIdx+1)]);
+      btns.push(['ステージ選択へ',()=>openScenario()]);
+    } else {
+      useUp(myId);
+      html=`<span class="lose-title">負け…${myName}のめんこを1枚うしなった</span><br>（残り${count(myId)}枚）`;
+      rescue();
+      btns=[[total()>0?'もう一度挑戦':'くじ引きへ',()=>total()>0?startStage(stageIdx):openKuji()],['ステージ選択へ',()=>openScenario()]];
+    }
+    persist();
+    showResult(html, btns);
+  }
+
+  function hitMsg(){
+    if(!lastHit) return '';
+    if(lastHit.dodge) return `${lastHit.who==='A'?nmA():nmB()}はひらりと身をかわした！ノーダメージ！ `;
+    return `${lastHit.label} ${lastHit.dmg}ダメージ！${lastHit.tag}${lastHit.notes} `;
+  }
+  function fly(mover, vel, onEnd){
+    animating=true;
+    let frames=0, hitDone=false; lastHit=null;
+    const kind=armed[mover]; armed[mover]=null; updateSpBtn();
+    const org={...(mover==='A'?posA:posB)};
+    function step(){
+      frames++;
+      let moverPos = mover==='A' ? posA : posB;
+      const targetPos = mover==='A' ? posB : posA;
+      const moverId = mover==='A' ? myId : cpuId;
+      const targetId = mover==='A' ? cpuId : myId;
+      moverPos.x += vel.x/60; moverPos.y += vel.y/60;
+      vel.x*=FRIC; vel.y*=FRIC;
+      setGauge(Math.hypot(vel.x,vel.y)/9);
+      if(mover==='A') posA=moverPos; else posB=moverPos;
+      draw();
+      if(frames>420){ onEnd({type:'settled'}); return; }
+      const distC=Math.hypot(moverPos.x-C.x,moverPos.y-C.y);
+      if(distC > R-EDGE){ onEnd({type:'out'}); return; }
+      const dT=Math.hypot(moverPos.x-targetPos.x,moverPos.y-targetPos.y);
+      if(dT < HIT){
+        const speed=Math.hypot(vel.x,vel.y);
+        const nx=(moverPos.x-targetPos.x)/(dT||1), ny=(moverPos.y-targetPos.y)/(dT||1);
+        const dot=vel.x*nx+vel.y*ny;
+        if(!hitDone){
+          hitDone=true;
+          const bonus=typeBonus(moverId,targetId);
+          const P=speed/9;
+          const c=speed>0 ? -dot/speed : 0;                 // 1=正面から / 0=真横からかすめた
+          const tk=mover==='A'?'B':'A';
+          const trav=Math.hypot(moverPos.x-org.x,moverPos.y-org.y);
+          const tid=tk==='A'?myId:cpuId;
+          const notes=[];
+          let dmg=0, dodge=false, isCrit=false;
+          if(Math.random()*100 < STAT[targetId].eva){
+            dodge=true;
+          } else {
+            dmg=calcDamage(kind==='wind'?P*1.3:P,c,bonus);
+            dmg=Math.round(dmg*STAT[moverId].atk/100);
+            if(kind==='wind') notes.push('追い風！');
+            if(kind==='far'){ const m=1+0.8*Math.min(1,trav/(R*0.9)); dmg=Math.round(dmg*m); notes.push(`首のばし×${m.toFixed(1)}`); }
+            if(kind==='near'||kind==='double'){ const m=1+0.8*Math.max(0,1-trav/(R*0.7)); dmg=Math.round(dmg*m); notes.push(`ゼロ距離攻撃×${m.toFixed(1)}`); }
+            if(kind==='double'){ dmg=Math.round(dmg*0.5); notes.push('連続攻撃の威力は半分'); }
+            if(kind==='fire'){ dmg+=5; notes.push('鬼火で+5！'); }
+            if(kind==='freeze'){ dmg=Math.round(dmg*0.5); notes.push('吹雪の威力は半分'); }
+            isCrit = Math.random() < critRate(moverId,kind==='crit');
+            if(isCrit){
+              dmg=Math.round(dmg*critMult(moverId)); notes.push('会心の一撃！防御無視！');
+            } else {
+              const defEff=STAT[targetId].def*(guard[tk]==='up'?DEF_UP:guard[tk]==='sp'?DEF_SP:1);
+              dmg=Math.round(dmg*100/defEff);
+              if(guard[tk]==='up') notes.push('防御アップでダメージ軽減');
+              if(guard[tk]==='sp') notes.push('防御力2倍でダメージ大幅軽減');
+            }
+            dmg=Math.max(1,dmg);
+            hp[tk]-=dmg; updateHP();
+          }
+          const tag=bonus>0?'（相性ばつぐん！）':bonus<0?'（相性がわるい…）':'';
+          lastHit={dmg,c,label:dodge?'':angleLabel(c),tag:dodge?'':tag,sp:Math.round(P),notes:notes.join(' '),freeze:kind==='freeze'&&!dodge, double:kind==='double'&&!dodge,dodge,who:tk};
+          // 当たられた側は少しだけ押される（正面ほど大きく）
+          const kb=dodge?0:Math.min(HIT*0.7, P*0.5*Math.max(0,c));
+          let tx=targetPos.x-nx*kb, ty=targetPos.y-ny*kb;
+          const dc=Math.hypot(tx-C.x,ty-C.y), lim=R-EDGE*2.2;
+          if(dc>lim){ tx=C.x+(tx-C.x)/dc*lim; ty=C.y+(ty-C.y)/dc*lim; }
+          targetPos.x=tx; targetPos.y=ty;
+          if(hp[tk]<=0){ onEnd({type:'flip',sp:lastHit.sp,tag,dmg}); return; }
+          $('msg').textContent=hitMsg();
+        }
+        vel.x=(vel.x-2*dot*nx)*0.4; vel.y=(vel.y-2*dot*ny)*0.4;
+        const sep=HIT*1.8; moverPos.x=targetPos.x+nx*sep; moverPos.y=targetPos.y+ny*sep;
+      }
+      if(Math.hypot(vel.x,vel.y) < 15){
+        const sep=HIT*1.8;
+        const dNow=Math.hypot(moverPos.x-targetPos.x,moverPos.y-targetPos.y);
+        if(dNow < sep){
+          let nx=(moverPos.x-targetPos.x)/(dNow||1), ny=(moverPos.y-targetPos.y)/(dNow||1);
+          if(!dNow){ nx = mover==='A'?1:-1; ny=0; }
+          moverPos.x=targetPos.x+nx*sep; moverPos.y=targetPos.y+ny*sep;
+          draw();
+        }
+        onEnd({type:'settled'}); return;
+      }
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  const nmA=()=>isTwoP()?'1P':'あなた', nmB=()=>isTwoP()?'2P':'CPU';
+  function nextTurn(who){
+    animating=false;
+    turn = who==='A' ? (isTwoP()?'p2':'cpu') : 'player';
+    setTurnBadge();
+    if(turn==='cpu') setTimeout(cpuThrow,900);
+  }
+  // 投げ終わりの処理。土俵の外に出ても、その場に残っても攻守交代
+  function afterThrow(who,res){
+    const me=who==='A'?nmA():nmB(), other=who==='A'?nmB():nmA();
+    const ok=who==='A'?'B':'A'; turnsTaken[who]++; guard[ok]=false; elA.style.filter=elB.style.filter=''; updateHP();
+    const extra=!!(lastHit&&(lastHit.freeze||lastHit.double)&&res.type!=='flip');
+    const dbl=!!(lastHit&&lastHit.double);
+    if(extra&&!dbl){ (who==='A'?elB:elA).style.filter='saturate(.4) brightness(1.5) hue-rotate(160deg)'; }
+    if(res.type==='flip'){
+      const toldOff=!isTwoP() && who==='B';
+      $('msg').innerHTML = toldOff
+        ? `<span class="lose-title">やられた！${res.dmg}ダメージ！HPを削り切られてひっくり返された…</span>`
+        : `<span class="win-title">パーン！${isTwoP()?me+'の':''}${res.dmg}ダメージ！HPを削り切ってひっくり返した！</span>`;
+      (who==='A'?elB:elA).classList.add('flipping');
+      setTimeout(()=>finishDuel(who==='A'), 800);
+    } else if(res.type==='out'){
+      if(who==='A') posA={...(lastAnchorA||startA)}; else posB={...(lastAnchorB||startB)};
+      draw();
+      $('msg').textContent=`${hitMsg()}${me}のめんこが土俵の外に出た！元の場所に戻って${extra?(dbl?me+'がもう一度行動！':other+'は凍っている！'+me+'がもう一度行動！'):'攻守交代、'+other+'の番！'}`;
+      nextTurn(extra?ok:who);
+    } else {
+      const hd=lastHit?hitMsg():`${me}のめんこは敵に当たらなかった。`;
+      $('msg').textContent=extra?`${hd}${dbl?'':other+'は凍りついた！'}${me}がもう一度行動！`:`${hd}攻守交代、${other}の番！`;
+      nextTurn(extra?ok:who);
+    }
+  }
+  // CPUは距離から「当たった時に必要な勢い」を逆算して打つ。腕前(cpuLevel)で狙いと力加減の誤差が変わる
+  let cpuLevel=4, lastAnchorB=null;
+  function gauss(){ return (Math.random()+Math.random()+Math.random()-1.5)*2; }
+  function cpuThrow(){
+    turn='cpu'; setTurnBadge(); setGauge(0);
+    $('msg').textContent='CPUの番…';
+    if(!used.B && spReady('B')) useSpecial('B');
+    if(defLeft.B>0 && !guard.B){
+      const low=hp.B/hp.mB;
+      if(Math.random() < (low<0.5?0.5:low<0.8?0.25:0.1)){ useDefUp('B'); }
+    }
+    lastAnchorB={...posB};
+    const lv=cpuLevel;
+    const dx=posA.x-posB.x, dy=posA.y-posB.y;
+    const dist=Math.hypot(dx,dy)||1;
+    const ang=Math.atan2(dy,dx)+gauss()*(0.35-0.035*lv);
+    const bonus=typeBonus(cpuId,myId);
+    const L=Math.max(0,dist-HIT);
+    // 腕前に応じた強さで狙う（序盤は力加減が雑、後半ほど正確）。最低でも届く勢いは確保
+    const cap=R*MAX_PULL_RATIO*11*(0.98+0.02*lv);
+    let v=cap*(0.72+0.03*lv);
+    v*=1+(Math.random()*2-1)*(0.25-0.025*lv);
+    v=Math.max(v, 32*9+L*KF);
+    v=Math.min(v,cap);
+    fly('B',{x:Math.cos(ang)*v, y:Math.sin(ang)*v}, res=>afterThrow('B',res));
+  }
+
+  function pointerXY(e){
+    const rect=arenaEl.getBoundingClientRect();
+    return {x:e.clientX-rect.left, y:e.clientY-rect.top};
+  }
+  function bindDrag(el, who){
+    el.addEventListener('pointerdown',(e)=>{
+      if(animating || dragging) return;
+      if(turn!==(who==='A'?'player':'p2')) return;
+      dragging=true; dragWho=who;
+      const cur=who==='A'?posA:posB;
+      dragAnchor={...cur};
+      if(who==='A') lastAnchorA={...cur}; else lastAnchorB={...cur};
+      dragStartClient=pointerXY(e); setGauge(0);
+      el.setPointerCapture(e.pointerId);
+      $('msg').textContent='引っぱって離そう！';
+    });
+    el.addEventListener('pointermove',(e)=>{
+      if(!dragging||dragWho!==who) return;
+      const p=pointerXY(e);
+      let dx=p.x-dragStartClient.x, dy=p.y-dragStartClient.y;
+      const dist=Math.hypot(dx,dy), max=R*MAX_PULL_RATIO;
+      if(dist>max){ dx=dx/dist*max; dy=dy/dist*max; }
+      const np={x:dragAnchor.x+dx, y:dragAnchor.y+dy};
+      if(who==='A') posA=np; else posB=np;
+      draw(who==='A'?1.15:1, who==='B'?1.15:1);
+      setGauge(Math.hypot(dx,dy)*11/9);
+    });
+    const release=()=>{
+      if(!dragging||dragWho!==who) return;
+      dragging=false;
+      const cur=who==='A'?posA:posB;
+      const pullX=cur.x-dragAnchor.x, pullY=cur.y-dragAnchor.y;
+      const pull=Math.hypot(pullX,pullY);
+      if(who==='A') posA={...dragAnchor}; else posB={...dragAnchor};
+      draw();
+      if(pull<12){ $('msg').textContent='もっと引っぱってから離そう！'; return; }
+      $('msg').textContent='えいっ！';
+      fly(who, {x:-pullX*11, y:-pullY*11}, res=>afterThrow(who,res));
+    };
+    el.addEventListener('pointerup',release);
+    el.addEventListener('pointercancel',release);
+  }
+  bindDrag(elA,'A'); bindDrag(elB,'B');
+
+  document.querySelectorAll('.ic[data-ic]').forEach(e=>{ e.innerHTML=ico(e.dataset.ic, +e.dataset.h||16); });
+  show('home');
+})();
+</script>
+</body>
+</html>
